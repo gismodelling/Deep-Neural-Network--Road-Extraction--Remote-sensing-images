@@ -21,4 +21,4 @@ location where you extracted it to your system PATH.
 For applying the method, first, we will split the data into a training set and validation (70% of the data),  and a test set (30%) data.
 The validation data set will be used to optimize the model parameters during training process.
 The model's performance will be tested with the data set and then we will classfiy images into road and non-road parts.
-Finally, use opening trivial nad closing operation for binary image and removing noises. 
+Finally, use opening trivial and closing operation for binary image and removing noises. 
