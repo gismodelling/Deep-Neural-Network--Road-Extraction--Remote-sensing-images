@@ -22,8 +22,7 @@ filename = 'train.csv'
 dataset = pd.read_csv(filename)
 list(dataset)
 Class_ID = dataset[['Class_ID']]
-#X = dataset[['b1_img1','b2_img1','b3_img1','mean_r','mean_g','mean_b','skewness_b','compactnes','brightness','area_pxl',
-             #'b1_pca','b2_pca','b3_pca','b1_rgb_hls','b2_rgb_hls','b3_rgb_hls']]
+
 X = dataset[['b1_mask','b2_mask','b3_mask','b1_hsl','b2_hsl','b3_hsl','glcm_stdde','number_of_','glcm_mean_','mean_r',
              'glcm_homog','mean_g','glcm_entro','mean_b','glcm_corre','glcm_dissi','length_pxl','max_diff','glcm_contr',
              'gldv_mean_','standard_d','brightness','gldv_entro','standard_2','area_pxl']]
@@ -76,7 +75,7 @@ model = Model(input=visible, output=den2)
 # Model summary
 #model=get_unet()
 model.summary()
-## Define optimizer: Stochastic gradient descent 
+## Define optimizer: A Method for Stochastic Optimization 
 adam = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 # Compile model
 model.compile(loss='sparse_categorical_crossentropy',
