@@ -1,104 +1,151 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Load Packages
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from keras.models import *
+from keras.layers import *
+from keras.layers import Dropout
+from keras.regularizers import *
+from keras import optimizers
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
+from sklearn.metrics import f1_score
+from sklearn import metrics
+import shapefile
+from keras.utils.np_utils import to_categorical
 
-# C extensions
-*.so
+# load dataset
+os.chdir('D:/Clip/clip1/New Folder (2)') 
+filename = 'train.csv'
+dataset = pd.read_csv(filename)
+list(dataset)
+Class_ID = dataset[['Class_ID']]
+#X = dataset[['b1_img1','b2_img1','b3_img1','mean_r','mean_g','mean_b','skewness_b','compactnes','brightness','area_pxl',
+             #'b1_pca','b2_pca','b3_pca','b1_rgb_hls','b2_rgb_hls','b3_rgb_hls']]
+X = dataset[['b1_mask','b2_mask','b3_mask','b1_hsl','b2_hsl','b3_hsl','glcm_stdde','number_of_','glcm_mean_','mean_r',
+             'glcm_homog','mean_g','glcm_entro','mean_b','glcm_corre','glcm_dissi','length_pxl','max_diff','glcm_contr',
+             'gldv_mean_','standard_d','brightness','gldv_entro','standard_2','area_pxl']]
+Y = Class_ID
+#Y_hot = to_categorical(Y)
+Y= np.ravel(Class_ID)
+# Split the data up in train and test sets
+from sklearn.model_selection import train_test_split
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.30, random_state=42)
+# NORMALIZE
+# Scale the train & test data set
+import keras
+X_train = preprocessing.scale(X_train)
+X_test = preprocessing.scale(X_test)
+#X_train = (X_train - X_train.min())/(X_train.min() - X_train.max())
+#X_test = (X_test - X_test.min())/(X_test.min() - X_test.max())
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+from keras import backend as K
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# input image dimensions
+img_rows, img_cols = 5, 5
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+if K.image_data_format() == 'channels_first':
+    X_train = X_train.reshape(X_train.shape[0], 1, img_rows, img_cols)
+    X_test = X_test.reshape(X_test.shape[0], 1, img_rows, img_cols)
+    input_shape = (1, img_rows, img_cols)
+else:
+    X_train = X_train.reshape(X_train.shape[0], img_rows, img_cols, 1)
+    X_test = X_test.reshape(X_test.shape[0],img_rows, img_cols, 1)
+    input_shape = (img_rows, img_cols, 1)
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
+#Y_train = keras.utils.to_categorical(Y_train, 2)
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
+print(X_train.shape, 'x samples')
+print(Y_train.shape, 'y samples')
+#model = Sequential()
+visible = Input(shape=(5,5,1))
+conv1 = Conv2D(32, kernel_size=(2, 2), strides=(1, 1),
+                 activation='relu')(visible)
+pool1 = MaxPooling2D(pool_size=(1,1), strides=(2, 2))(conv1)
+#drop1 = Dropout(0.25)(pool1)
+conv2 = Conv2D(64, (3, 3), padding = 'same', activation='relu')(pool1)
+pool2 = MaxPooling2D(pool_size=(1, 1))(conv2)
+drop2 = Dropout(0.25)(pool1)
+flat = Flatten()(drop2)
+den1 = Dense(256, activation='relu')(flat)
+drop2 = Dropout(0.25)(den1)
+den2 = Dense(2, activation='sigmoid')(drop2)
+model = Model(input=visible, output=den2)
+# Model summary
+#model=get_unet()
+model.summary()
+## Define optimizer: Stochastic gradient descent 
+adam = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+# Compile model
+model.compile(loss='sparse_categorical_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+  # Fit model                
+history=model.fit(X_train, 
+          Y_train,
+          epochs=100, 
+          batch_size=100, 
+          validation_split = 0.2,
+          verbose=1,
+          )
+# summarize history for accuracy
+plt.plot(history.history['acc'])
+plt.plot(history.history['val_acc'])
+plt.title('Model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['Training', 'Validation'], loc='lower right')
+plt.show()
+# summarize history for loss
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('Model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['Training', 'Validation'], loc='upper right')
+plt.show()
+# Model evaluation with test data set 
+# Prediction at test data set
+Y_pred = model.predict(X_test)
+score = model.evaluate(X_test, Y_test,batch_size=100, verbose=1)
+print(score)
+# Class prediction
+test_class = model.predict_classes(X_test)
+# Precission and accuracy:
+print("Classification report:\n%s" %
+      metrics.classification_report(Y_test, test_class))
+print("Classification accuracy: %f" %
+      metrics.accuracy_score(Y_test, test_class))
+# load dataset
+os.chdir("C:/Users/Abolfazl/Desktop/ecognition/seperate")
+grid = 'all1.csv'
+grid_point = pd.read_csv(grid)
+list(grid_point)
+# Create grid data frame with ten bands
+X_grid = grid_point[['b1_mask','b2_mask','b3_mask','b1_hsl','b2_hsl','b3_hsl','glcm_stdde','number_of_','glcm_mean_','mean_r',
+             'glcm_homog','mean_g','glcm_entro','mean_b','glcm_corre','glcm_dissi','length_pxl','max_diff','glcm_contr',
+             'gldv_mean_','standard_d','brightness','gldv_entro','standard_2','area_pxl']]
+# Create xy-coordinated data frame
+xy_grid=grid_point[['point_id','x', 'y']]
+# Scale the grid set
+X_grid = preprocessing.scale(X_grid)
+# Predictionv at grid locations
+X_grid = X_grid.reshape(X_grid.shape[0], img_rows, img_cols, 1)
+grid_class = pd.DataFrame(model.predict_classes(X_grid))
+#grid_class = model.predict(X_grid)
+# Join xy-coordinates with predicted grid_class data frame
+grid_class_xy = pd.concat([xy_grid, grid_class], axis=1, join_axes=[xy_grid.index])
+# Rename predicted class column to Class_ID
+grid_class_xy.columns.values[3] = 'Class_ID'
+## Load landuse ID file
+os.chdir("D:/ecog_test/envi/excel")
+id = 'Landuse_ID.csv'
+LU_ID = pd.read_csv(id)
+print(LU_ID)
+# Join  Landuse class 
+grid_class_final=pd.merge(grid_class_xy, LU_ID, left_on='Class_ID', right_on='Class_ID', how='left')
+grid_class_final.head(3)
+## Write CSV files 
+grid_class_final.to_csv('predcted_landuse_class1.csv')
