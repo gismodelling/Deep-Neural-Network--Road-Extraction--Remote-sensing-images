@@ -13,9 +13,9 @@ and Linux. If you want to run this tutorial with GUP version of TensorFlow you n
 
 #NVIDIA GUP: First, you must make sure weather your computer is running with NVIDIAÂ® GPU or not. 
 
-#CUDA Toolkit v10.0.130: If you have an NVIDIAÂ® GPU in your system, you need to download and install CUDA Toolkit v9.0. 
+#CUDA Toolkit v10.0.130: If you have an NVIDIAÂ® GPU in your system, you need to download and install CUDA Toolkit v10.0.130. 
 
-#cuDNN v7.0: The download the zip file version cuDNN v7.0 for your CUDA Toolkitv10.0.130. You need to extract the zip file and add the
+#cuDNN v7.0: The download the zip file version cuDNN v7.0 for your CUDA Toolkit v10.0.130. You need to extract the zip file and add the
 location where you extracted it to your system PATH. 
 
 For applying the method, first, we will split the data into a training set and validation (70% of the data),  and a test set (30%) data.
